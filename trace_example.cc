@@ -23,7 +23,6 @@ int main(int argc, char** argv) {
     // Insert markers and simulate work
     kutrace::mark_a("start");        // Custom marker for start
     myFunction(5);                 // Function with loop (triggers events)
-    sleep(2);                      // Allow time for kernel-user transitions
     kutrace::mark_a("end");          // Custom marker for end
 
     // Stop and dump trace
