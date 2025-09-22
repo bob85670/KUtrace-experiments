@@ -1,0 +1,16 @@
+2.2) The optimized one's number of cycles is O(1 million) less than unoptimized.
+0.00 cycles per iteration means that the loop is removed. The gcc optimizer constant-folded all the billion increments of incr into just a constant result pre-calculated at compile time.
+
+2.3) The compiler do not remove the dead code variable sum now.
+
+2.4) Volatile keyword is used to indicate that a variable may change in ways that compiler cannot predict. So it prevents compiler optimization on loop unrolling. So the optimized magnitude of cycles and cycles/iteration is now close to 1/5 of unoptimized.
+
+2.5) mystery1_64bit_int_add.cpp
+
+2.6) The numbers in large iterations are not useful because CPU may do caching (or instruction pipelining) that leads to measuring the issue time instead.
+
+2.8) mystery1_64bit_int_more.cpp, mystery1_double_operations.cpp
+(For keeping data values awat from extremes of overflow and underflow, kIterations should be around 10.)
+
+2.9) mystery1_double_operations.cpp
+There is no sudden change in latency.
