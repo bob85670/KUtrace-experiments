@@ -1,0 +1,45 @@
+Notes: 
+1. the cache line size is the smallest unit of data transferred between the cache and main memory. 
+When the stride is smaller than the cache line size, multiple accesses may hit the same cache line, resulting in lower access times. When the stride matches or exceeds the cache line size, each access requires fetching a new cache line, increasing the access time
+
+2. L2 access time: 10-20 cycles
+main memory: 100-300 cycles
+
+3.1) 64 bytes. the scrambled time jumps doubles from stride 64 to 128. It means that cache misses are more frequently as the stride spans multiple cache line.
+
+3.2) For stride 256, (256 bytes = 4 cache lines)
+naive (22 cy/ld): CPU optimizing by issuing muliple loads in parallel or prefetching. So it masks true cache miss penality.
+linear (70 cy/ld): a mix of L1 hits and L2 misses
+scrambled (188 cy/ld): DRAM access with slightly buffering/slightly cache hits 
+
+3.3) mystery2_copy.cpp
+The scrambled time at stride 128 improves from 158 to 124. Now 2 successive accesses can be at same row. The CPU and DRAM hardware implement a shortcut to just maintain column access. 
+
+3.4) (FindCacheSizes is accessing 2^4 up to 2^16 cache lines)
+L1: 32KB (2^9 = 512 lines), because lgcount[10] and lgcount[11]'s cycles are both 10, indicating it starts to use L2 cache
+L2: 256KB (2^12)
+L3: 3MB (2^16), because its cycle increase to 34.
+
+3.5) By taking averages 
+L1: 3-4 cycles 
+L2: 14-15 cycles
+L3: 50-60 cycles
+
+3.6) change code line 283
+
+int base = 3;
+for (int exp = 1; i < exp; i++) {
+	int count = 1;
+	for (int i = 0; i < exp; i++) { // don't use pow()
+		count *= base;
+	}
+
+	// same 
+}
+
+3.7) lgcount[8] to [9] drop is about cache eviction. [10] to [11] drop is about transition to next cache level and LRU.
+[8] (103 cy/ld): conflict misses where muliple lines compete for the same cache set
+[9] (83 cy/ld): exactly fills 32KB L1 cache. fully utilized
+[10] (85 cy/ld): starts filling the 256KB L2 cache. more L1 misses, but L2 cache's larger size and higher associatibity reduce cnflict miss so no observable changes
+[11] (69 cy/ld): buy LRU. it handles the overflow from L1 more efficiently when the load is distributed across L2
+

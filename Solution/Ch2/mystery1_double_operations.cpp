@@ -39,7 +39,7 @@ int main (int argc, const char** argv) {
 
       fprintf(stdout, "division: \n");
       fprintf(stdout, "%d iterations, %lu cycles, %4.2f cycles/iteration\n", 
-              kIterations, elapsed_div, felapsed_div / kIterations);
+              i, elapsed_div, felapsed_div / kIterations);
       fprintf(stdout, "%lu %f\n", t, quotient);
 
       int64_t startcy_div = GetCycles();
