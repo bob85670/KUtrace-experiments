@@ -41,5 +41,9 @@ for (int exp = 1; i < exp; i++) {
 [8] (103 cy/ld): conflict misses where muliple lines compete for the same cache set
 [9] (83 cy/ld): exactly fills 32KB L1 cache. fully utilized
 [10] (85 cy/ld): starts filling the 256KB L2 cache. more L1 misses, but L2 cache's larger size and higher associatibity reduce cnflict miss so no observable changes
-[11] (69 cy/ld): buy LRU. it handles the overflow from L1 more efficiently when the load is distributed across L2
+[11] (69 cy/ld): by LRU. it handles the overflow from L1 more efficiently when the load is distributed across L2
 
+3.8) mystery2_find_cache_associativity.cpp
+L1: 9-ways
+L2: 11-ways/13-ways
+L3: 10-ways
