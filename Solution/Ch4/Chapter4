@@ -1,0 +1,6 @@
+This is difficult. I barely understand the given code.
+
+4.1) matrix_remap_openmp.cc
+I use openMP API because it is convenient. Or I may try to parallelize myself.
+
+Also I think I do not know how to run a trace given a .cpp file with kutrace api calls integrated.
