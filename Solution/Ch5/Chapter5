@@ -1,0 +1,44 @@
+Notes: 
+- show a tree of block devices and their mount point:
+$ lsblk
+
+- mount a partition of disk:
+$ sudo mkdir /mnt/mydisk
+$ sudo mount /dev/nvme0n1p1 /mnt/mydisk
+
+- to ensure data is fully written to the disk but not in buffers
+$ sync
+
+5.0) follow Book p.73
+my mounted disk(SSD, not hard disk) directory: /mnt/synology
+
+It is noted that makeself program should run in /postproc folder. And check that show_disk.html is here too
+And run export LC_ALL=C in /postproc folder.
+
+I do not have harddisk, so for 5.1-5.6 and 5.10. I can only predict what will happen.
+
+5.1) [predict] track-to-track head switch and re-servo time.
+
+5.2) [predict] because the filesystem logical block size does not align perfectly with disk sector size, or because of disk caches/ filesystem caches
+
+5.3) [predict] smallest transfer time = 10-20μs
+seek and rotate time to get very first block read = 10-15μs
+
+5.4) [predict] large tranfer time (like 1GB files) = 1-10s
+
+5.5) [predict] 100-200MB/s
+
+5.6) [predict] 250-300MB/s. It is because of the on-disk track buffer
+
+5.7) seek time = 200μs
+transfer rate = 0.000195MB/s
+
+5.8) bobby_disk_read.html, bobby_disk_write.html
+No observable discontinuities. Because SSD use NAND flash memory with no moving parts, and has DRAM caches to buffer writes and stage read.
+
+5.9) mystery3_time_disk_write.cpp
+
+5.10) [predict] OS I/O scheduler may reorder or batch I/O requests to optimize. 
+
+5.11) bobby2_read_times.html, bobby2_write_times.html
+It takes 30ms to complete now at rate 0.003ms. Because the added code will update the buffer's timestamps periodically along with writes, these timestamps are read and plotted.
