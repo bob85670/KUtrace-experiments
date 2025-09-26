@@ -1,0 +1,21 @@
+1
+./server4 &
+
+./client4 127.0.0.1 12345 -k 1000 -seed1 write -key "aaaa" + -value "valueaaa_0000" + 1000000 &  ./client4 127.0.0.1 12346 -k 1000 -seed1 write -key "bbbb" + -value "valuebbb_0000" + 1000000 
+
+./client4 127.0.0.1 12347 -k 1000 -seed1 write -key "cccc" + -value "valueccc_0000" + 1000000 &  ./client4 127.0.0.1 12348 -k 1000 -seed1 write -key "dddd" + -value "valueddd_0000" + 1000000 
+
+2
+./server_disk &
+
+./client4 127.0.0.1 12345 -k 1000 -seed1 write -key "aaaa" + -value "valueaaa_0000" + 1000000
+
+./client4 127.0.0.1 12347 -k 200 -seed1 write -key "cccc" + -value "valueccc_0000" + 1000000 &  ./client4 127.0.0.1 12348 -k 200 -seed1 write -key "dddd" + -value "valueddd_0000" + 1000000 
+
+3
+./server_disk &
+
+./client4 127.0.0.1 12346 -k 1000 -seed1 chksum -key "aaaa"
+
+./client4 127.0.0.1 12347 -k 200 -seed1 chksum -key "bbbb" &
+./client4 127.0.0.1 12348 -k 200 -seed1 chksum -key "bcaa"
