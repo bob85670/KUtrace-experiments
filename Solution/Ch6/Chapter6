@@ -1,0 +1,17 @@
+I run server and client in the same machine.
+
+./client4 127.0.0.1 12345 ping 
+./client4 127.0.0.1 12345 -k 10 write -key "kkkkk" + -value "kkkkk" + 1000000
+./client4 127.0.0.1 12345 -k 10 read -key "kkkkk" +
+./client4 127.0.0.1 12345 quit
+
+I cannot postprocess all the .log files although they seems have data written. Tried many times. So I can only view the client console statistics.
+
+6.1) estimate: 0.1ms
+reality: 0.2ms
+
+6.2) estimate: 0.8ms
+reality: 1.4ms in average
+
+6.3) estimate: 1ms
+reality: 4.7ms for the first read, and 1.2ms for latter reads
