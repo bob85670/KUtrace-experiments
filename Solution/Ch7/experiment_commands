@@ -19,3 +19,6 @@
 
 ./client4 127.0.0.1 12347 -k 200 -seed1 chksum -key "bbbb" &
 ./client4 127.0.0.1 12348 -k 200 -seed1 chksum -key "bcaa"
+
+
+should be command like: ./server_disk /tmp/keyvaluestore 12345 4 -verbose -direct

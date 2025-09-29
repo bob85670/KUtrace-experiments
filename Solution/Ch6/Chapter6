@@ -1,11 +1,27 @@
-I run server and client in the same machine.
+I tried many times and cannot postprocess. Then I looked at the code and found out that the book's commands given in p.106 are wrong. The correct command:
+./dumplogfile4 "ping" client4_20250929_092429_ubuntu2_392753.log >client4_20250929_092429_ubuntu2_392753.json
+./makeself show_rpc.html client4_20250929_092429_ubuntu2_392753.json client4_20250929_092429_ubuntu2_392753.html
+The above command needed to be run in /postproc.
+
+useful command: ip addr show
+
+I run server and client in the same machine. client4_20250929_092429_ubuntu2_392753.html
 
 ./client4 127.0.0.1 12345 ping 
 ./client4 127.0.0.1 12345 -k 10 write -key "kkkkk" + -value "kkkkk" + 1000000
 ./client4 127.0.0.1 12345 -k 10 read -key "kkkkk" +
 ./client4 127.0.0.1 12345 quit
 
-I cannot postprocess all the .log files although they seems have data written. Tried many times. So I can only view the client console statistics.
+And find out that the estimated network time is extremely small (1us), which is 1000x less than expected. It is because of the OS internal routing optimization.
+
+Next, I have to configure to bypass OS internal routing optimization (which keeps traffice local), so I modify the routing table.
+modify_routing_table.png
+Then I vertified there is tcp handshake between a client-server test by wireshark.
+wireshark_tcp_handshake.png(frame 127, 129, 130)
+(simple client server test:
+$ python3 -m http.server 8000 --bind 172.31.12.22
+$ curl http://172.31.12.22:8000)
+
 
 6.1) estimate: 0.1ms
 reality: 0.2ms
