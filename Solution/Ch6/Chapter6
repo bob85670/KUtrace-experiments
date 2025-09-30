@@ -5,12 +5,7 @@ The above command needed to be run in /postproc.
 
 useful command: ip addr show
 
-I run server and client in the same machine. client4_20250929_092429_ubuntu2_392753.html
-
-./client4 127.0.0.1 12345 ping 
-./client4 127.0.0.1 12345 -k 10 write -key "kkkkk" + -value "kkkkk" + 1000000
-./client4 127.0.0.1 12345 -k 10 read -key "kkkkk" +
-./client4 127.0.0.1 12345 quit
+I run server and client in the same machine using . client4_20250929_092429_ubuntu2_392753.html
 
 And find out that the estimated network time is extremely small (1us), which is 1000x less than expected. It is because of the OS internal routing optimization.
 
@@ -22,12 +17,19 @@ wireshark_tcp_handshake.png(frame 127, 129, 130)
 $ python3 -m http.server 8000 --bind 172.31.12.22
 $ curl http://172.31.12.22:8000)
 
+./client4 172.31.12.22 12345 ping 
+./client4 172.31.12.22 12345 -k 10 write -key "kkkkk" + -value "kkkkk" + 1000000
+./client4 172.31.12.22 12345 -k 10 read -key "kkkkk" +
+./client4 172.31.12.22 12345 quit
 
-6.1) estimate: 0.1ms
-reality: 0.2ms
+6.1) client4_20250930_144727_ubuntu2_523896.html 
+estimate: 
+reality: 0.5ms
 
-6.2) estimate: 0.8ms
-reality: 1.4ms in average
+6.2) client4_20250930_144756_ubuntu2_523938.html
+estimate: 
+reality: 1.5ms each in average
 
-6.3) estimate: 1ms
-reality: 4.7ms for the first read, and 1.2ms for latter reads
+6.3) client4_20250930_144804_ubuntu2_523948.html
+estimate: 
+reality: 1ms for the first read, and 0.3ms in average for latter reads
