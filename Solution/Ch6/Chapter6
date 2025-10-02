@@ -3,10 +3,11 @@ I tried many times and cannot postprocess. Then I looked at the code and found o
 ./makeself show_rpc.html client4_20250929_092429_ubuntu2_392753.json client4_20250929_092429_ubuntu2_392753.html
 The above command needed to be run in /postproc.
 
+###################################################################################################
+
 useful command: ip addr show
 
-I run server and client in the same machine using . client4_20250929_092429_ubuntu2_392753.html
-
+I run server and client in the same machine using ./client4_20250929_092429_ubuntu2_392753.html
 And find out that the estimated network time is extremely small (1us), which is 1000x less than expected. It is because of the OS internal routing optimization.
 
 Next, I have to configure to bypass OS internal routing optimization (which keeps traffice local), so I modify the routing table.
@@ -17,19 +18,34 @@ wireshark_tcp_handshake.png(frame 127, 129, 130)
 $ python3 -m http.server 8000 --bind 172.31.12.22
 $ curl http://172.31.12.22:8000)
 
+###################################################################################################
+
 ./client4 172.31.12.22 12345 ping 
 ./client4 172.31.12.22 12345 -k 10 write -key "kkkkk" + -value "kkkkk" + 1000000
 ./client4 172.31.12.22 12345 -k 10 read -key "kkkkk" +
 ./client4 172.31.12.22 12345 quit
 
+Important: 50ms is standard magnitude for request-response latency. (RTT)
+
 6.1) client4_20250930_144727_ubuntu2_523896.html 
-estimate: 
+estimate: 0.01ms pings are usually small ICMP packets. And server only needs ti validate the checksum.
 reality: 0.5ms
 
 6.2) client4_20250930_144756_ubuntu2_523938.html
-estimate: 
+estimate: 0.05ms for 1MB if written in RAM, because involved key parsing, memory allocation and data copy
 reality: 1.5ms each in average
 
 6.3) client4_20250930_144804_ubuntu2_523948.html
-estimate: 
+estimate: 0.03ms becasue reads are usually faster than writes because no allocation
 reality: 1ms for the first read, and 0.3ms in average for latter reads
+
+And all the response message transmittion above just add RTT/2 (from the server back to the client after processing).
+
+Reason for difference:
+Software Overhead: Parsing, serialization, or protocol handling (e.g., TCP, HTTP stack overhead like kernel interrpts and socket handling) adds ~0.1-0.5 ms.
+System Load: complex memory management (e.g., allocation delay/fragmentation when search for available memory, garbage collection to find free space) adds ~0.5-1 ms for 1 MB ops.
+Initialization: First read’s 1 ms likely includes setup (e.g., cache miss, session init), while subsequent reads benefit from caching.
+
+It is not likely to because of disk IO which would be 5-10ms.
+
+
