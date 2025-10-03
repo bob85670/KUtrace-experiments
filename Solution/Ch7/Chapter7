@@ -1,6 +1,17 @@
-7.1) 
+time align commands:
+./timealign rpc1.log rpc2.log rpc3.log
+./timealign -all rpc1.log rpc2.log rpc3.log
+
+7.1) I do not understand why it is not aligned as expected. The expected 1-2ms gap from between 2 RPC are eliminated.
+
+7.2) I do not understand why postprocessing the server log gives no result.
+
+7.3) I do not understand why postprocessing the server log gives no result.
 
 
-7.2) 
-
-7.3)
+Concurrency overhead:
+- Lock Contention: Threads waiting for shared resources (e.g., key-value store) due to lock acquisition delays.
+- Context Switching: CPU switching between threads from frequent state saves/restores.
+- Memory Contention: Threads competing for RAM bandwidth
+- Queueing Delays: Busy threads cause operation queues
+- Thread Synchronization: Coordinating threads via mutexes/signaling 
