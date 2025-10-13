@@ -123,7 +123,7 @@ bool ReadOneRPC(int sockfd, RPC* rpc, uint32* hash32) {
   ////uint32 rpcid16 = rpcid32_to_rpcid16(rpc->header->rpcid);
   ////uint32 hash16 = hash32_to_hash16(packet_hash);
   ////kutrace::addevent(KUTRACE_RX_USER, (rpcid16 << 16) | hash16);
-  kutrace::addevent(KUTRACE_RX_USER, packet_hash);
+  // kutrace::addevent(KUTRACE_RX_USER, packet_hash);
 
   // Read the data
   if (marker.datalen > 0) {
@@ -152,7 +152,7 @@ bool SendOneRPC(int sockfd, const RPC* rpc, uint32* hash32) {
   ////uint32 rpcid16 = rpcid32_to_rpcid16(rpc->header->rpcid);
   ////uint32 hash16 = hash32_to_hash16(packet_hash);
   ////kutrace::addevent(KUTRACE_TX_USER, (rpcid16 << 16) | hash16);
-  kutrace::addevent(KUTRACE_TX_USER, packet_hash);
+  // kutrace::addevent(KUTRACE_TX_USER, packet_hash);
   
 #if 1
   // Make a single message to transmit

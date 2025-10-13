@@ -181,7 +181,7 @@ bool SendCommand(int sockfd, uint32* randseed, const char* command,
   uint32 tempid = rpcid32_to_rpcid16(request.header->rpcid);
 
   if (verbose) {fprintf(stdout, "client4: SendRequest:     "); PrintRPC(stdout, &request);}
-  LogRPC(logfile, &request);
+  //LogRPC(logfile, &request);
 
 
   ok &= SendRequest(sockfd, &request);
@@ -200,7 +200,7 @@ bool SendCommand(int sockfd, uint32* randseed, const char* command,
   lglen8 = response.header->lglen2;	// Respense length
 
   if (verbose) {fprintf(stdout, "client4: ReceiveResponse: "); PrintRPC(stdout, &response);}
-  LogRPC(logfile, &response);
+  //LogRPC(logfile, &response);
   int64 elapsed = resp_rcv_time - response.header->req_send_timestamp;
  
   // Print first 20 round-trip times in msec
@@ -241,7 +241,7 @@ bool SendQuit(int sockfd, uint32* randseed) {
 
   request.header->req_send_timestamp = GetUsec();
   request.header->type = ReqSendType;
-  LogRPC(logfile, &request);
+  //LogRPC(logfile, &request);
   if (verbose) {fprintf(stdout, "client4: SendRequest:     "); PrintRPC(stdout, &request);}
   ok &= SendRequest(sockfd, &request);
 
@@ -251,7 +251,7 @@ bool SendQuit(int sockfd, uint32* randseed) {
   int64 resp_rcv_time = GetUsec();
   response.header->resp_rcv_timestamp = resp_rcv_time;
   response.header->type = RespRcvType;
-  LogRPC(logfile, &response);
+  //LogRPC(logfile, &response);
   if (verbose) {fprintf(stdout, "client4: ReceiveResponse: "); PrintRPC(stdout, &response);}
   int64 elapsed = resp_rcv_time - response.header->req_send_timestamp;
 
@@ -356,8 +356,8 @@ int main (int argc, const char** argv) {
   txbytes = 0;
   rxbytes = 0;
 
-  const char* logfilename = MakeLogFileName(argv[0]);
-  logfile = OpenLogFileOrDie(logfilename);
+  // const char* logfilename = MakeLogFileName(argv[0]);
+  // logfile = OpenLogFileOrDie(logfilename);
 
   // Initialize pseudo-random generator based on process id and time
   uint32 pid = getpid();                      
@@ -406,8 +406,8 @@ int main (int argc, const char** argv) {
           (rxbytes * 1.0) / total_usec);
   fprintf(stderr, "\n");
 
-  fclose(logfile);
-  fprintf(stderr, "%s written\n", logfilename);
+  // fclose(logfile);
+  // fprintf(stderr, "%s written\n", logfilename);
 
 
   return EXIT_SUCCESS;

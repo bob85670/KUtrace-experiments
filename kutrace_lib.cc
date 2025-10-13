@@ -150,7 +150,12 @@ u64 noinline DoControl(u64 command, u64 arg)
 
 u64 inline DoControl(u64 command, u64 arg)
 {
-  return syscall(__NR_kutrace_control, command, arg);
+#ifndef __APPLE__
+    return syscall(__NR_kutrace_control, command, arg);
+#else
+    // Stub for macOS: kutrace is disabled
+    return 0;
+#endif
 }
 
 #endif
@@ -185,7 +190,7 @@ const char* FormatSecondsDateTime(int32 sec) {
   // if (sec == 0) {return "unknown";}  // Longer spelling: caller expecting date
   time_t tt = sec;
   struct tm* t = localtime(&tt);
-  sprintf(gTempDateTimeBuffer, "%04d%02d%02d_%02d%02d%02d",
+  snprintf(gTempDateTimeBuffer, sizeof(gTempDateTimeBuffer), "%04d%02d%02d_%02d%02d%02d",
          t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
          t->tm_hour, t->tm_min, t->tm_sec);
   return gTempDateTimeBuffer;
@@ -213,7 +218,7 @@ const char* MakeTraceFileName(const char* argv0, char* str) {
 
   int pid = getpid();
 
-  sprintf(str, "%s_%s_%s_%d.trace", slash, timestr, hostnamestr, pid);
+  snprintf(str, sizeof(str) * 2, "%s_%s_%s_%d.trace", slash, timestr, hostnamestr, pid);
   return str; 
 }           
 
