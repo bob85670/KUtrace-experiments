@@ -121,7 +121,7 @@ const char* FormatSecondsDateTime(int32 sec) {
   // if (sec == 0) {return "unknown";}  // Longer spelling: caller expecting date
   time_t tt = sec;
   struct tm* t = localtime(&tt);
-  sprintf(gTempDateTimeBuffer, "%04d%02d%02d_%02d%02d%02d", 
+  snprintf(gTempDateTimeBuffer, sizeof(gTempDateTimeBuffer), "%04d%02d%02d_%02d%02d%02d", 
          t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, 
          t->tm_hour, t->tm_min, t->tm_sec);
   return gTempDateTimeBuffer;
@@ -133,7 +133,7 @@ const char* FormatSecondsTime(int32 sec) {
   // if (sec == 0) {return "unk";}  // Shorter spelling: caller expecting no date
   time_t tt = sec;
   struct tm* t = localtime(&tt);
-  sprintf(gTempDateTimeBuffer, "%02d%02d%02d", 
+  snprintf(gTempDateTimeBuffer, sizeof(gTempDateTimeBuffer), "%02d%02d%02d", 
          t->tm_hour, t->tm_min, t->tm_sec);
   return gTempDateTimeBuffer;
 }
@@ -275,7 +275,7 @@ const char* MakeLogFileName(const char* argv0) {
   hostnamestr[255] = '\0';
   pid = getpid();
 
-  sprintf(tempLogFileName, "%s_%s_%s_%d.log",
+  snprintf(tempLogFileName, sizeof(gTempDateTimeBuffer), "%s_%s_%s_%d.log",
           slash, timestr, hostnamestr, pid);
   return tempLogFileName;
 }
