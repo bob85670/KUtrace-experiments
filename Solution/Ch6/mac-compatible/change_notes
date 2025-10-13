@@ -1,0 +1,32 @@
+Summary of Compiler Warnings and Fixes
+
+1. Macro Expansion Producing 'defined' Has Undefined Behavior
+Issue: Macros like Isx86_64 in timecounters.h and kutrace_control_names.h use defined (e.g., #define Isx86_64 defined(__x86_64)), causing undefined behavior when used in #if directives, triggering -Wexpansion-to-defined warnings.
+
+Fix: Redefine macros as constants (0 or 1) using #if defined at definition time. Example:
+
+#if defined(__x86_64)
+#define Isx86_64 1
+#else
+#define Isx86_64 0
+#endif
+
+
+2. Deprecated sprintf Usage
+Issue: sprintf is used in dclab_log.cc and kutrace_lib.cc, but it’s deprecated on macOS due to buffer overflow risks, triggering -Wdeprecated-declarations warnings.
+
+Fix: Replace sprintf with snprintf, specifying the buffer size. Example:
+
+snprintf(gTempDateTimeBuffer, sizeof(gTempDateTimeBuffer), "%04d%02d%02d_%02d%02d%02d", ...);
+
+
+3. Deprecated syscall Usage
+Issue: syscall(__NR_kutrace_control, ...) in kutrace_lib.cc (line 153) is deprecated on macOS since 10.12, as syscall is unsupported, triggering a -Wdeprecated-declarations warning.
+
+Fix: Disable kutrace on macOS using conditional compilation, returning a stub value (e.g., 0). Example:
+
+#ifndef __APPLE__
+return syscall(__NR_kutrace_control, command, arg);
+#else
+return 0; // Stub for macOS
+#endif
