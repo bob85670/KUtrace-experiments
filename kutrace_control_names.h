@@ -7,14 +7,42 @@
 #ifndef __KUTRACE_CONTROL_NAMES_H__
 #define __KUTRACE_CONTROL_NAMES_H__
 
-/* Add others as you find and test them */
-#define Isx86_64	defined(__x86_64)
-#define IsAmd_64	Isx86_64 && defined(__znver1) 
-#define IsIntel_64	Isx86_64 && !defined(__znver1)
+// Define architecture macros as constants to avoid 'defined' in macro expansions
+#if defined(__x86_64)
+#define Isx86_64 1
+#else
+#define Isx86_64 0
+#endif
 
-#define IsArm_64	defined(__aarch64__)
-#define IsRPi4		defined(__ARM_ARCH) && (__ARM_ARCH == 8)
-#define IsRPi4_64	IsRPi4 && IsArm_64
+#if Isx86_64 && defined(__znver1)
+#define IsAmd_64 1
+#else
+#define IsAmd_64 0
+#endif
+
+#if Isx86_64 && !defined(__znver1)
+#define IsIntel_64 1
+#else
+#define IsIntel_64 0
+#endif
+
+#if defined(__aarch64__)
+#define IsArm_64 1
+#else
+#define IsArm_64 0
+#endif
+
+#if defined(__ARM_ARCH) && (__ARM_ARCH == 8)
+#define IsRPi4 1
+#else
+#define IsRPi4 0
+#endif
+
+#if IsRPi4 && IsArm_64
+#define IsRPi4_64 1
+#else
+#define IsRPi4_64 0
+#endif
 
 #if IsAmd_64
 #include "kutrace_control_names_ryzen.h"
@@ -30,5 +58,3 @@
 #endif
 
 #endif	// __KUTRACE_CONTROL_NAMES_H__
-
-
