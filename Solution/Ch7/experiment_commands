@@ -1,3 +1,9 @@
+7.1
+time align commands(for logs produced by different machines):
+./timealign rpc1.log rpc2.log rpc3.log
+./timealign -all rpc1.log rpc2.log rpc3.log
+
+
 7.2 (Experiment 1): 
 ./server4 &
 
