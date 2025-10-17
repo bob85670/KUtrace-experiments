@@ -3,21 +3,28 @@
 #include <time.h>		// time()
 #include "../../timecounters.h"
 
-static const int kIterations = 1000000;
+static const int kIterations = 1000;
 
 int main (int argc, const char** argv) { 
-  uint64_t product = 0;
-  uint64_t quotient = 0;
+  uint64_t product = 1;
+  uint64_t quotient = 100000000;
 
   time_t t = time(NULL);	// A number that the compiler does not know
   uint64_t incr = t & 255;		// Unknown increment 0..255, now 64-bit
 
   int64_t startcy = GetCycles();
-  for (int i = 0; i < kIterations; ++i) {
+  for (int i = 1; i < kIterations; ++i) {
+    // product *= incr;
     quotient /= incr;
   }
   int64_t elapsed = GetCycles() - startcy;
   double felapsed = elapsed;
+
+  // fprintf(stdout, "multiplication: \n");
+  // fprintf(stdout, "%d iterations, %lu cycles, %4.2f cycles/iteration\n", 
+  //         kIterations, elapsed, felapsed / kIterations);
+  
+  // fprintf(stdout, "%lu %lu\n", t, product);
 
   fprintf(stdout, "division: \n");
   fprintf(stdout, "%d iterations, %lu cycles, %4.2f cycles/iteration\n", 
@@ -52,7 +59,7 @@ int main (int argc, const char** argv) {
 
 //   // multiple
 //   int64_t startcy_mul = GetCycles();
-//   for (int i = 0; i < kIterations; ++i) {
+//   for (int i = 1; i < kIterations; ++i) {
 //     product *= incr;
 //   }
 //   int64_t elapsed_mul = GetCycles() - startcy_mul;
