@@ -1,0 +1,10 @@
+commands:
+1. strace
+sudo apt-get install strace
+strace -o trace.log ./myprogram
+
+11.1) top
+It is interesting to find out that my shell program is not being traced by top. But it executes. It is not shown as a row in top dashboard, like add program will cause 100% CPU time.
+
+11.2) Use top to observe strace's overhead
+I use strace to trace program's system calls like write() and clone(), and result is shown in trace.log). However, top command still does not shows any overheads on strace or shell program.
