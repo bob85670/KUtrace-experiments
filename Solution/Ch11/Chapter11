@@ -8,3 +8,12 @@ It is interesting to find out that my shell program is not being traced by top. 
 
 11.2) Use top to observe strace's overhead
 I use strace to trace program's system calls like write() and clone(), and result is shown in trace.log). However, top command still does not shows any overheads on strace or shell program.
+
+11.3) a modern version of whetstone.c is found.
+but oprofile module is depreciated and cannot found in the kernel 6.6.106.
+
+So I change to do an experiment that one run strace output from vanilla Whetstonce, one run strace to evaluate the output from instrumented Whetstonce program used for perf. In this experiment I can know the overhead of perf.
+
+Since after installed KUtrace, the current kernel is a custom kernel so it is unable to local package to linux-tools-xxx. I need to switch back to other kernel.
+
+Result: 200000x extra time needed for the overhead of perf analysis. 1500x more read() system calls are added which accounts for 68% of total overhead. 

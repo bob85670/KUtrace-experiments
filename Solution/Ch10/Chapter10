@@ -4,7 +4,7 @@ if three requests all arrive within the same 50ms intervals, the latter request 
 
 To calculuate Prob(3 request in 50ms, given an average rate of 60 requests/minute):
 lambda = 60 * (50/60000) = 0.05 requests
-P(3) = (lambda^3 * e^(-lambda)) / 3!    (it is the poisson pmf)
+P(3) = (lambda^3 * e^(-lambda)) / 3!    (using the poisson pmf)
      = 1.98 * 10^(-5)
 
 The expected deadline missed in a day = 10000 * 1.98 * 10^(-5) = 0.198
