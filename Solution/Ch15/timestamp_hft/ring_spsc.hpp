@@ -4,6 +4,7 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <algorithm>
 
 constexpr size_t CACHE_LINE = 64;
 
@@ -34,6 +35,44 @@ public:
         out = buffer[r & (N-1)];
         read_idx.store(r + 1, std::memory_order_release);
         return true;
+    }
+
+    // Bulk push, returns number of items pushed
+    [[nodiscard]] size_t push_bulk(const T* items, size_t n) noexcept {
+        size_t w = write_idx.load(std::memory_order_relaxed);
+        size_t r = read_idx.load(std::memory_order_acquire);
+        
+        size_t free_space = N - (w - r);
+        if (free_space == 0) return 0;
+
+        size_t count = std::min(free_space, n);
+
+        // This could be optimized with two memcpys to handle wrap-around
+        for (size_t i = 0; i < count; ++i) {
+            buffer[(w + i) & (N - 1)] = items[i];
+        }
+
+        write_idx.store(w + count, std::memory_order_release);
+        return count;
+    }
+
+    // Bulk pop, returns number of items popped
+    [[nodiscard]] size_t pop_bulk(T* out, size_t n) noexcept {
+        size_t r = read_idx.load(std::memory_order_relaxed);
+        size_t w = write_idx.load(std::memory_order_acquire);
+        
+        size_t avail = w - r;
+        if (avail == 0) return 0;
+
+        size_t count = std::min(avail, n);
+        
+        // This could be optimized with two memcpys to handle wrap-around
+        for(size_t i = 0; i < count; ++i) {
+            out[i] = buffer[(r + i) & (N - 1)];
+        }
+
+        read_idx.store(r + count, std::memory_order_release);
+        return count;
     }
 
     // Pre-fault whole ring (call once at start)

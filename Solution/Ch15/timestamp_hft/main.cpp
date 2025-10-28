@@ -20,7 +20,6 @@
 #include "dpdk_receiver.hpp"
 
 // === CONFIGURATION ===
-constexpr size_t PKT_BURST = 32;
 constexpr size_t SIMULATED_PACKETS = 1'000'000;
 constexpr uint64_t BASE_TIMESTAMP = 0x00000000001FF000ULL;
 

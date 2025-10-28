@@ -18,6 +18,7 @@ struct pkt_desc {
 
 constexpr size_t PKT_RING_SIZE = 1 << 16;   // 64K entries
 constexpr size_t TS_RING_SIZE  = 1 << 18;   // 256K 64-bit timestamps
+constexpr size_t PKT_BURST     = 32;        // Max packets in a burst
 
 extern std::atomic<bool> shutdown_requested;
 
@@ -29,47 +30,46 @@ alignas(64) static RingBufferSPSC<uint64_t, TS_RING_SIZE>  ts_ring;
 // Producer: NIC DMA → pkt_ring (runs in kernel-bypass poll loop)
 // ------------------------------------------------------------------
 [[gnu::always_inline]]
-inline void receive_loop_forever(uint64_t base_timestamp)
+inline void receive_loop_forever(uint64_t initial_timestamp)
 {
-    pkt_desc batch[32];
-    uint64_t out_ts[32];
+    // Buffers on stack
+    pkt_desc batch[PKT_BURST];
+    uint32_t in_ts20[PKT_BURST];
+    uint64_t out_ts64[PKT_BURST];
 
-    // Pre-fault rings
+    uint64_t last_full_ts = initial_timestamp; // State for the unwrapper
+
+    // Pre-fault rings (optional, good practice)
     pkt_ring.prefault();
     ts_ring.prefault();
 
     while (!shutdown_requested.load(std::memory_order_acquire)) {
         // ----- Burst receive (DPDK-style) -----
-        size_t nb_rx = 0;
-        for (; nb_rx < 32; ++nb_rx) {
-            if (!pkt_ring.pop(batch[nb_rx])) break;
-        }
+        size_t nb_rx = pkt_ring.pop_bulk(batch, PKT_BURST);
         if (nb_rx == 0) {
-            if (shutdown_requested.load(std::memory_order_acquire)) break;
             __builtin_ia32_pause();
             continue;
         }
 
         // ----- Extract 20-bit timestamps -----
         for (size_t i = 0; i < nb_rx; ++i) {
-            // Assume hardware writes timestamp in pkt_desc
-            // (real NICs fill it via descriptor)
-            ((uint32_t*)out_ts)[i] = batch[i].timestamp20;
+            in_ts20[i] = batch[i].timestamp20;
         }
 
-        // ----- SIMD unwrap (4-wide) -----
-        size_t simd_cnt = (nb_rx + 3) & ~3ULL;
-        extend_timestamps_simd((const uint32_t*)out_ts,
-                               out_ts,
-                               simd_cnt,
-                               base_timestamp);
+        // ----- SIMD unwrap -----
+        extend_timestamps_simd(in_ts20, out_ts64, nb_rx, last_full_ts);
 
         // ----- Push full timestamps to consumer ring -----
-        for (size_t i = 0; i < nb_rx; ++i) {
-            while (!ts_ring.push(out_ts[i])) {
-                if (shutdown_requested.load(std::memory_order_acquire)) goto done;
+        // ----- Push full timestamps to consumer ring -----
+        size_t pushed = 0;
+        while (pushed < nb_rx) {
+            size_t n_pushed = ts_ring.push_bulk(out_ts64 + pushed, nb_rx - pushed);
+            if (n_pushed == 0) {
+                 if (shutdown_requested.load(std::memory_order_acquire)) goto done;
                 __builtin_ia32_pause();
+                continue;
             }
+            pushed += n_pushed;
         }
     }
 done:
