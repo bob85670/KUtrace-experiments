@@ -19,6 +19,8 @@ struct pkt_desc {
 constexpr size_t PKT_RING_SIZE = 1 << 16;   // 64K entries
 constexpr size_t TS_RING_SIZE  = 1 << 18;   // 256K 64-bit timestamps
 
+extern std::atomic<bool> shutdown_requested;
+
 // Global rings (placed in huge pages in real code)
 alignas(64) static RingBufferSPSC<pkt_desc, PKT_RING_SIZE> pkt_ring;
 alignas(64) static RingBufferSPSC<uint64_t, TS_RING_SIZE>  ts_ring;
@@ -36,13 +38,17 @@ inline void receive_loop_forever(uint64_t base_timestamp)
     pkt_ring.prefault();
     ts_ring.prefault();
 
-    while (true) {
+    while (!shutdown_requested.load(std::memory_order_acquire)) {
         // ----- Burst receive (DPDK-style) -----
         size_t nb_rx = 0;
         for (; nb_rx < 32; ++nb_rx) {
             if (!pkt_ring.pop(batch[nb_rx])) break;
         }
-        if (nb_rx == 0) { __builtin_ia32_pause(); continue; }
+        if (nb_rx == 0) {
+            if (shutdown_requested.load(std::memory_order_acquire)) break;
+            __builtin_ia32_pause();
+            continue;
+        }
 
         // ----- Extract 20-bit timestamps -----
         for (size_t i = 0; i < nb_rx; ++i) {
@@ -60,9 +66,14 @@ inline void receive_loop_forever(uint64_t base_timestamp)
 
         // ----- Push full timestamps to consumer ring -----
         for (size_t i = 0; i < nb_rx; ++i) {
-            while (!ts_ring.push(out_ts[i])) __builtin_ia32_pause();
+            while (!ts_ring.push(out_ts[i])) {
+                if (shutdown_requested.load(std::memory_order_acquire)) goto done;
+                __builtin_ia32_pause();
+            }
         }
     }
+done:
+    std::cout << "[RECV] Shutdown signal received. Exiting.\n";
 }
 
 // ------------------------------------------------------------------

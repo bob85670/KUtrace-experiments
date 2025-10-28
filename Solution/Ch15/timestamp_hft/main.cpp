@@ -10,6 +10,9 @@
 #include <sys/mman.h>
 #include <sched.h>
 #include <x86intrin.h>
+#include <iomanip>
+#include <atomic>
+#include <csignal>
 
 // Include our HFT modules
 #include "simd_unwrap.hpp"
@@ -24,6 +27,13 @@ constexpr uint64_t BASE_TIMESTAMP = 0x00000000001FF000ULL;
 // Simulated packet source (instead of real NIC)
 // alignas(64) static RingBufferSPSC<pkt_desc, PKT_RING_SIZE> pkt_ring;
 // alignas(64) static RingBufferSPSC<uint64_t, TS_RING_SIZE> ts_ring;
+
+// Global Shutdown Flag
+std::atomic<bool> shutdown_requested{false};
+
+void signal_handler(int) {
+    shutdown_requested.store(true, std::memory_order_release);
+}
 
 // ------------------------------------------------------------------
 // Simulated packet generator (replaces NIC DMA)
@@ -43,14 +53,13 @@ void packet_generator() {
         pkt.timestamp20 = static_cast<uint32_t>(ts & 0xFFFFF);
 
         while (!pkt_ring.push(pkt)) {
+            if (shutdown_requested.load(std::memory_order_acquire)) return;
             __builtin_ia32_pause();
         }
 
-        ts += 10 + (i % 100);  // realistic jitter + wrap
-        if ((i % 100'000) == 0) ts += (1ULL << 20);  // force wrap
+        ts += 11 + (i % 77);
+        if (i > 0 && i % 12345 == 0) ts += (1ULL << 20);
     }
-
-    std::cout << "[GEN] Done sending " << SIMULATED_PACKETS << " packets\n";
 }
 
 // ------------------------------------------------------------------
@@ -80,11 +89,15 @@ void timestamp_consumer() {
 
     std::cout << "\n=== First 10 Timestamps ===\n";
     for (size_t i = 0; i < first10.size(); ++i)
-        std::cout << "  [" << i << "] 0x" << std::hex << first10[i] << std::dec << "\n";
+        std::cout << "  [" << i << "] 0x" 
+          << std::hex << std::setw(16) << std::setfill('0') << first10[i]
+          << std::dec << "\n";
 
     std::cout << "\n=== Last 10 Timestamps ===\n";
     for (size_t i = 0; i < last10.size(); ++i)
-        std::cout << "  [" << (SIMULATED_PACKETS - 10 + i) << "] 0x" << std::hex << last10[i] << std::dec << "\n";
+        std::cout << "  [" << (SIMULATED_PACKETS - 10 + i) << "] 0x" 
+              << std::hex << std::setw(16) << std::setfill('0') << last10[i]
+              << std::dec << "\n";
 
     std::cout << "\n[CONSUMER] All " << count << " timestamps processed.\n";
 }
@@ -103,19 +116,28 @@ int main() {
     pkt_ring.prefault();
     ts_ring.prefault();
 
+    // Install signal handler
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+
     std::cout << "HFT Timestamp Engine Starting...\n";
-    std::cout << "SIMD: AVX2 4-wide unwrap\n";
-    std::cout << "Rings: Lock-free SPSC, cache-line aligned\n";
-    std::cout << "Threads: Core 0 (gen) → Core 1 (consumer)\n\n";
+    std::cout << "Press Ctrl+C to stop gracefully.\n\n";
 
     auto start = __rdtsc();
 
-    // Launch generator and receiver
     std::thread gen_thread(packet_generator);
     std::thread recv_thread([]{ receive_loop_forever(BASE_TIMESTAMP); });
     std::thread cons_thread(timestamp_consumer);
 
-    gen_thread.join();
+    gen_thread.join();  // Generator done
+
+    // Wait a moment for last packets to drain
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // Signal shutdown
+    shutdown_requested.store(true, std::memory_order_release);
+    std::cout << "\n[MAIN] Shutdown requested...\n";
+
     recv_thread.join();
     cons_thread.join();
 
