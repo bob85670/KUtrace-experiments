@@ -1,0 +1,17 @@
+25.1) at time 699_000, left of Fig 25.8
+
+Core,Event Sequence (Time Relative to ~85–95 μs),Duration,Notes
+Core 0,local_timer_vector → timer(1) → scheduler(7),~2–3 μs,Light BH chain
+Core 1,local_timer_vector,~1.4 μs,Minimal processing
+Core 2,local_timer_vector → BH:rcu(9) → scheduler → read()=4096 → mystery25 → read() → scheduler,~6–8 μs,"Heavy, I/O-related chain"
+Core 3,local_timer_vector,~1.4 μs,Minimal
+
+There is an abnormal 4KB transfer group which involves mulitple core activities. I estimate that it is a hardware interrupt from unrelated device.
+
+The truth is it is a system-wide kernel maintenance event --- multi-core timer interrupt storm triggered by a global or broadcast IPI (Inter-Processor Interrupt) event , with local APIC timer vectors firing near-simultaneously across all 4 cores, followed by normal ssd interrupt routine in core 2. 
+
+This leads the I/O thread on Core 2 runs 11us, 2x longer time needed for other normal ssd interrupt.
+
+The purpose of this kernel maintenance event on core 0 is to do a global timekeeping, scheduler load-balancing, and RCU (Read-Copy Update) synchronization to avoid the grace period problem.
+
+No need to fix this.

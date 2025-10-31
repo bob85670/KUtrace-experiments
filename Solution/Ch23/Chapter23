@@ -1,0 +1,18 @@
+Notes:
+- it is counter productive to have more worker tasks than available CPU
+- every thread in linux is represented by a struct task_struct which stores a cpumask_t cpus_allowed properties for CPU affinity
+
+23.1) Set a fixed time threshold (slice) per execution. use a queue to store the order of what thread would use to next available CPU. And the order is specific by the weight -- every thread's priority specified by Linux.
+To enhance dynamics ordering, use a variable to track vfinish + virtual_time + (slice/weight)
+
+(can write a kernel patch that changes to existing kernel source files)
+
+23.2) When a CPU becomes idle (due to interrupt/context switch), signal all sleeping/blocked threads. If the now-idle CPU is in a thread’s preferred affinity, wake it up and migrate it to run the rest of its time slice there.
+
+bad approach above:
+- wake up all thread will cause cache trashing, lock contention and wakeup storms
+- forcing mmigration is against cache locality
+- no prioritization
+- race condition when Thread A see CPU X idle and start migrating, but CPU X is already taken by thread B
+
+When a CPU becomes idle, immediately pull a runnable task from the most-loaded sibling CPU — instead of waiting for the next periodic load balance.

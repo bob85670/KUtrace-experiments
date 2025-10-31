@@ -1,0 +1,11 @@
+Notes: 
+- number of I/O operations = total pages in chunk / (standard page size on x86-64 * number of pages in a group)
+- 1KB = 1024B, 1MB = 1024^2 B, 1GB = 1024^3 B
+- Linux use readahead/prefetching when handling page faults in sequential access pattern. 
+- malloc prefetch 8 pages, mmap prefetches 128-256 pages
+
+24.1) improves. (40 * 1024 * 1024) / (4096 * 16) = 640 I/O operations per 40MB. 50% less I/Os
+
+24.2) best. (40 * 1024 * 1024) / (4096 * 128) = 78 I/O operations per 40MB. 16x fewer I/Os than 8-page. And it matches modern SSD storage block size and avold wasted reads. (for example when the OS request 8 pages, it asks to read 32KB and SSD reads 512KB internally, 480KB is wasted)
+
+24.3) to avoid thrashing (fetched useful but unused pages), reduce RAM presure(prefetching uses RAM) and reduce cache pollution (most program access memory randomly and sequential prefetch may pollution the caches).

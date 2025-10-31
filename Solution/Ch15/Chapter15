@@ -1,1 +1,7 @@
-15.1) 
+15.1) timestamps.cpp
+
+Candidate = current era + new 20-bit value
+
+If the new value is much smaller than the previous one (by more than half of 2²⁰), it didn’t go backward in time — instead, the counter wrapped around forward.
+
+If the new value is much larger than the previous (again > 2¹⁹), and data is supposed to be sorted/in-order, this suggests we missed a wrap — the clock wrapped backward into a previous cycle.
