@@ -1,0 +1,61 @@
+Notes:
+1. shift click one of the bubbles from 1-4 to save the current view
+
+Steps to export your noted trace view:
+shift click the red dot to open the secondary menu. Press export to copy the text
+Just insert to savedview in orginal .html files, be aware to follow the formatting of that json string with no spaces.
+
+2. It is important to hide unrelated lines and produce a clearer graph
+
+3. For 29.10, If see an error "KUtrace module/code not loaded or PTRACE needed or use insmod check=0", do:
+$ cd linux/module
+$ make
+$ sudo insmod kutrace_mod.ko tracemb=20 check=0
+This produces kutrace_mod.ko, which has to be recompiled each time you modify the kernel
+because it links against exported symbols there, including the exported KUtrace
+variables.
+
+
+
+29.1) Reason 1: queue state inconsistency: items are enqueued multiple times but not prepoerly removed, ldeading to 100x slowdown.
+Reason 2: lock discipline violation: there are context switch inside lock and lock holder delayed with contended lock spins.
+
+29.2) same as above
+
+## For 29.3 to 29.7, I provide a marked button html file for convenient tracing. ##
+29.3) It takes a nanosleep and get context switched before releasing the lock.
+
+29.4) The system call goes agead and sets a hardware timer and then blocks, context-switches to the idle process, drops into deep sleep
+
+29.5) It is waiting to be assigned to CPU. It context switch to task2. And 4.6.84, task 2 wakes client and run a instance then blocks and wait for CPU3 to execute task2. And when task2 ends and wakes up CPU2, task 3 run instead of client.
+
+29.6) I cannot find PID 19110. Observe: 4 RPCs are sharing 3 CPUS. It is not productive because some content switch overheads are introduced and RPC like Work.9466 gets a longer lock waiting time and gets the lock and immediately preempted twice .
+
+29.7) It is mainly due to RPC thread not dedicated, schuduler runqueue pressure and CPU migration with cache misses.
+
+29.8) The goal for uniform dist is within 1.5x slower of average for the 90th percentile, while for skewed, 1.75x slower. As the skewed distribution's queueing time for slowing request stack up rapidly.
+
+29.9) "Coffee-Shop Rule in Google": RPS = 1000 ÷ (average_ms + tail_buffer_ms)
+let tail_buffer_ms of uniform traffix be 5ms, skwed, 8ms
+Uniform: 1000 ÷ (15 + 5) = 50
+Skewed : 1100 ÷ (25 + 8) = 33
+
+Noted: Google SRE workbook example: “budget 5–10 ms headroom before p90 explodes.”
+
+29.10) ./queuetest_loadbalance -rate 2000 -n 100 -skew. Then postprocess using show.rpc.html
+Compare to Book Fig 29.9, the total processing time of all 100 transactions drops from 300ms to 140ms, reduced 2x time. And the pattern is not stacking up increased length in later transactions-- it is fairly distributed and later transaction has the chance of starting beforehand, though the later ones are more likely to take longer time. Also, there are a few transactions that can finish within 50us.
+
+
+
+Reference: 
+The exported buttons: 
+],
+"extra" : [
+],
+"savedview" : [
+  ["29.33", {"savedtransformX":{"k":471.13607711992375,"x":-6253.1098253014125,"y":0},"rangeX":1606,"xleft_ts":26.363762483137965,"xright_ts":26.364178418171424,"savedtransformY":{"k":0.9999999999999817,"x":0,"y":6.180952380953045},"rangeY":809,"ytop_track":-3,"ybot_track":250,"grouplength":[4,23,100,0],"groupcompress":[2,1,2,0],"grouplabelypos":[34.6,325.8,487.59999999999997,0],"groupfirsttrack":[0,90,140,0],"grouphashilite":[0,1,1,0],"annottype_value":0,"annotateuser_value":0,"annotateall_value":0,"marks_value":3,"arcs_value":2,"freq_value":2,"waits_value":1,"ipc_value":0,"samp_value":0,"ovhd_value":1,"lock_value":-1,"cb_value":0,"searchnot_value":1,"search_text":"19110","minmax_units_value":1,"usec_lo_time":0,"usec_hi_time":0,"basetime0_value":0,"annotated_one_d":9144,"rowToHilite":[21,1,5,1,3,1,1,97],"dummy":0}],
+  ["29.44", {"savedtransformX":{"k":286.0255073464808,"x":-34426.870525029495,"y":0},"rangeX":1606,"xleft_ts":26.37683036646369,"xright_ts":26.377515487178336,"savedtransformY":{"k":1.180992661429519,"x":0,"y":-116.53289692884537},"rangeY":809,"ytop_track":24,"ybot_track":204,"grouplength":[4,23,100,0],"groupcompress":[2,1,0,0],"grouplabelypos":[-80.6,328.8,829.3000000000001,0],"groupfirsttrack":[0,90,200,0],"grouphashilite":[0,1,0,0],"annottype_value":0,"annotateuser_value":0,"annotateall_value":0,"marks_value":3,"arcs_value":2,"freq_value":2,"waits_value":1,"ipc_value":0,"samp_value":0,"ovhd_value":1,"lock_value":-1,"cb_value":0,"searchnot_value":0,"search_text":"Work.36768","minmax_units_value":1,"usec_lo_time":0,"usec_hi_time":0,"basetime0_value":0,"annotated_one_d":5625,"rowToHilite":[21,1,1,0,1,0,1,0,1,101],"dummy":0}],
+  ["29.55", {"savedtransformX":{"k":14.320401134847133,"x":-3825.5011624639747,"y":0},"rangeX":1606,"xleft_ts":26.394779947037115,"xright_ts":26.40846406092155,"savedtransformY":{"k":1.1809926614295176,"x":0,"y":-115.9341078810055},"rangeY":809,"ytop_track":22,"ybot_track":185,"grouplength":[4,23,100,0],"groupcompress":[2,1,0,0],"grouplabelypos":[-83.89999999999999,368.59999999999997,821.2,0],"groupfirsttrack":[0,90,180,0],"grouphashilite":[0,1,0,0],"annottype_value":0,"annotateuser_value":0,"annotateall_value":0,"marks_value":1,"arcs_value":2,"freq_value":2,"waits_value":1,"ipc_value":0,"samp_value":0,"ovhd_value":1,"lock_value":-1,"cb_value":0,"searchnot_value":0,"search_text":"Work.36768","minmax_units_value":1,"usec_lo_time":0,"usec_hi_time":0,"basetime0_value":0,"annotated_one_d":5890,"rowToHilite":[21,1,1,0,1,1,104,null,null,null,null,null,null,null,null,null,null,null,1,1,null,1,1,2],"dummy":0}],
+  ["29.66", {"savedtransformX":{"k":2936.740347936354,"x":-1394776.9317552638,"y":0},"rangeX":1606,"xleft_ts":26.420093527315604,"xright_ts":26.420160255039807,"savedtransformY":{"k":0.9999999999999822,"x":0,"y":-3.6981206726775895},"rangeY":809,"ytop_track":0,"ybot_track":232,"grouplength":[4,23,100,0],"groupcompress":[2,1,1,0],"grouplabelypos":[26.2,342.8,518.6,0],"groupfirsttrack":[0,90,140,0],"grouphashilite":[0,1,1,0],"annottype_value":0,"annotateuser_value":0,"annotateall_value":0,"marks_value":3,"arcs_value":2,"freq_value":2,"waits_value":1,"ipc_value":0,"samp_value":0,"ovhd_value":1,"lock_value":-1,"cb_value":0,"searchnot_value":1,"search_text":"19110","minmax_units_value":1,"usec_lo_time":0,"usec_hi_time":0,"basetime0_value":0,"annotated_one_d":9144,"rowToHilite":[22,1,2,1,51,1,5,1,1,5,1,39],"dummy":0}],
+  ["29.7", {"savedtransformX":{"k":0.8467453123625268,"x":135.7089226304044,"y":0},"rangeX":1606,"xleft_ts":26.343306137079857,"xright_ts":26.574735820998907,"savedtransformY":{"k":1,"x":0,"y":2.1083682008368205},"rangeY":809,"ytop_track":-2,"ybot_track":271,"grouplength":[4,23,100,0],"groupcompress":[2,1,0,0],"grouplabelypos":[29.3,299,808.3000000000001,0],"groupfirsttrack":[0,90,260,0],"grouphashilite":[0,1,0,0],"annottype_value":0,"annotateuser_value":0,"annotateall_value":0,"marks_value":1,"arcs_value":2,"freq_value":2,"waits_value":1,"ipc_value":0,"samp_value":0,"ovhd_value":1,"lock_value":-1,"cb_value":0,"searchnot_value":0,"search_text":"","minmax_units_value":1,"usec_lo_time":0,"usec_hi_time":0,"basetime0_value":0,"annotated_one_d":13544,"rowToHilite":[12,null,null,null,null,null,null,null,null,null,1,1,1,1,1,1,1,1],"dummy":0}]
+]}
