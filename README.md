@@ -4,6 +4,8 @@ This repository contains a set of C++ experiments and tools for use with KUtrace
 
 Beyond being a collection of tools, this repository serves as a detailed portfolio of my knowledge in low-level system performance, latency optimization, and mechanical sympathy. The experiments in the `Solution/` directory are designed to measure, analyze, and optimize software performance by understanding the behavior of the underlying hardware and software systems. Each chapter represents a deep dive into a specific concept, building a comprehensive picture of modern performance engineering.
 
+Some code is provided by Richard L. Sites in https://github.com/dicksites/KUtrace.
+
 ---
 
 ## Performance Insights & Key Concepts
@@ -111,12 +113,117 @@ This section provides a detailed, chapter-by-chapter analysis of the experiments
 
 ## KUtrace Usage Guide
 
-### Building the Code
-A `Makefile` is provided. Simply run `make` to build all executables into the `bin/` directory.
+There are two primary ways to generate traces for your applications: using the `kutrace_control` command-line tool for system-wide tracing, or by instrumenting your C++ code directly with the KUtrace API.
 
-### Generating Traces
--   **Method 1 (System-Wide)**: Use the `kutrace_control` utility from your KUtrace installation to start (`goipc`) and `stop` a system-wide trace.
--   **Method 2 (In-Code)**: `#include "kutrace_lib.h"` and use `kutrace::goipc()`, `kutrace::addevent()`, and `kutrace::stop()` to instrument your C++ code directly.
+## Building the Code
 
-### Visualizing Traces
-Use the `postproc3.sh` script from your KUtrace installation to turn any `.trace` file into an interactive HTML visualization.
+A `Makefile` is provided to build all the experiment binaries. Simply run `make` from the root directory of the project:
+
+```bash
+make
+```
+
+This will compile all executables and place them in the `bin/` directory.
+
+To clean up all compiled files, you can run:
+```bash
+make clean
+```
+
+---
+
+## Method 1: System-Wide Tracing with `kutrace_control`
+
+This method allows you to trace all activity on the system between two points in time. This is useful for getting a high-level overview of system performance.
+
+1.  **Start Tracing**: Navigate to the `postproc` directory within your main KUtrace installation and run the control utility.
+
+    ```bash
+    # Path to your KUtrace installation
+    $ cd /path/to/KUtrace/postproc
+    $ ./kutrace_control
+    ```
+
+2.  **Select Trace Type**: At the prompt, type one of the following commands and press Enter:
+    *   `go`: Starts a basic trace.
+    *   `goipc`: Starts a trace that also includes instructions-per-cycle for each timespan.
+    *   `gollc`: Starts a trace that also includes last-level cache misses for each timespan.
+    *   `goipcllc`: Starts a trace that includes both IPC and LLC metrics.
+
+3.  **Stop Tracing**: Run your workload. When you are ready to stop tracing, type `stop` at the `kutrace_control` prompt and press Enter.
+
+    This will stop the trace and write a raw binary trace file with a name like `ku_20240709_152922_hostname_pid.trace`.
+
+---
+
+## Method 2: Instrumenting Code with the KUtrace C++ API
+
+This method gives you fine-grained control over what you trace by adding tracing calls directly into your C++ source code. This is ideal for detailed performance analysis of specific code paths.
+
+The `src/queuetest.cc` file provides a detailed example of this usage.
+
+### API Usage Overview
+
+1.  **Include the Library**: Add the KUtrace library header to your C++ file.
+
+    ```cpp
+    #include "kutrace_lib.h"
+    ```
+
+2.  **Initialize Tracing**: In your `main` function, start the tracing process. `goipc` is a good default to get instruction counts.
+
+    ```cpp
+    int main (int argc, const char** argv) {
+      // Start self-tracing when the program begins
+      kutrace::goipc(argv[0]);
+      
+      // ... your program logic ...
+    }
+    ```
+
+3.  **Add Events and Markers**: Instrument your code by adding events, names, and markers at points of interest.
+
+    ```cpp
+    // Log a specific event with a type and value
+    // e.g., tracking an RPC request ID
+    kutrace::addevent(KUTRACE_RPCIDREQ, request_id);
+
+    // Associate a human-readable name with an ID
+    kutrace::addname(KUTRACE_METHODNAME, request_id, "MyMethod");
+
+    // Mark a specific point in the code with a simple label
+    kutrace::mark_a("ProcessingStarted");
+    ```
+
+    The marking functions (`mark_a`, `mark_b`, `mark_c`, `mark_d`) use different letters to write to different trace buffers, which can help reduce contention on multi-core systems.
+
+4.  **Stop Tracing**: Before your program exits, stop the trace and write the data to a file.
+
+    ```cpp
+    int main (int argc, const char** argv) {
+      // ... start tracing and run logic ...
+
+      // Stop tracing and create the trace file
+      char namebuf[256];
+      kutrace::stop(kutrace::MakeTraceFileName("my_trace_prefix", namebuf));
+
+      return 0;
+    }
+    ```
+
+---
+
+## Visualizing the Trace
+
+Once you have a `.trace` file (from either method), you can generate an interactive HTML visualization.
+
+1.  **Run the Post-Processing Script**: Use the `postproc3.sh` script (from your KUtrace installation's `postproc` directory) to process the raw trace file.
+
+    ```bash
+    # Usage: ./postproc3.sh <trace_file> <"Caption for the chart">
+    $ /path/to/KUtrace/postproc/postproc3.sh ku_20240709_152922_hostname_pid.trace "My Application Trace"
+    ```
+
+2.  **View the Results**: The script will produce a `.json` file and an `.html` file. Open the `.html` file in your web browser to view the interactive trace visualization.
+
+
