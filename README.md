@@ -8,6 +8,41 @@ Some code is provided by Richard L. Sites in https://github.com/dicksites/KUtrac
 
 ---
 
+## Latency Table (Ch2–Ch6 + Ch7 predictions with local production setup)
+
+| Chapter | Description | Latency number |
+|---|---|---|
+| Ch2 | `mystery1.cc` unoptimized (`-O0`) loop cost | **~4.3 cycles/iteration** |
+| Ch2 | `mystery1.cc` optimized (`-O2`) loop removed | **~0.00 cycles/iteration** |
+| Ch2 | 64-bit integer add measurement (`mystery1_64bit_int_add.cpp`, sample run) | **~0.22 cycles/iteration** (at 100 iters), **~0.00 cycles/iteration** (at 1e9 iters; “not meaningful”) |
+| Ch2 | 64-bit integer multiply measurement (from `2.8.png`) | **~2.67 cycles/iteration** |
+| Ch2 | 64-bit integer divide measurement (from `2.8.png`) | **~27.84 cycles/iteration** |
+| Ch2 | Double add measurement (from `2.8b.png`) | **~50.00 cycles/iteration** |
+| Ch2 | Double multiply measurement (from `2.8b.png`) | **~2209.40 cycles/iteration** |
+| Ch2 | Double divide measurement (from `2.8b.png`) | **~86.80 cycles/iteration** |
+| Ch2 | Double divide drift (from `2.9.png`) | **~13.22–14.23 cycles/iteration** |
+| Ch3 | L2 access time | **10–20 cycles** |
+| Ch3 | Main memory access time | **100–300 cycles** |
+| Ch3 | `mystery2` stride 256 | **naive 22 cy/ld**, **linear 70 cy/ld**, **scrambled 188 cy/ld** |
+| Ch3 | `mystery2` stride 128 scrambled | **158 cy/ld** |
+| Ch3 | Cache-size test points (`mystery2` lgcount) | **[8] 103 cy/ld**, **[9] 83 cy/ld**, **[10] 85 cy/ld**, **[11] 69 cy/ld** |
+| Ch3 | Average per-cache | **L1 3–4 cycles**, **L2 14–15 cycles**, **L3 50–60 cycles** |
+| Ch4 | Matrix multiply times (from `4.0.png`) | **3.259 s** (SimpleMultiply), **4.451 s** (Columnwise), **1.073 s** (Transpose), **0.480 s** (TransposeFast), **0.351 s** (BlockMultiplyRemap), **0.254 s** (SimpleMultiplyOne) |
+| Ch4 | BlockMultiplyRemap single-thread vs OpenMP (from `4.1.png`) | **0.346 s** (no OpenMP), **0.072 s** (OpenMP) |
+| Ch5 | **SSD read** 40MB completion | **25.904 ms** |
+| Ch5 | **SSD write** 40MB completion | **30.828 ms** |
+| Ch5 | **SSD seek time to read soonest-delivered block** | **0.213 ms** (≈ **213 μs**) |
+| Ch6 | Ping RPC (estimate vs reality, `Chapter6`) | **0.01 ms (est)**, **0.5 ms (real)** |
+| Ch6 | 1MB write RPC (estimate vs reality, `Chapter6`) | **0.05 ms (est)**, **1.5 ms avg (real)** |
+| Ch6 | 1MB read RPC (estimate vs reality, `Chapter6`) | **0.03 ms (est)**, **1.0 ms first (real)**, **0.3 ms avg later (real)** |
+| Ch6 | Measured client4 ping average (from `6.png`) | **0.514 ms/RPC** |
+| Ch6 | Measured client4 1MB write average (from `6.png`) | **1.450 ms/RPC** |
+| Ch6 | Measured client4 1MB read average (from `6.png`) | **0.379 ms/RPC** |
+| Ch7 (predict) | **Experiment 1 (RAM)**: 4 clients write 1MB values to RAM DB over **1 Gbit/s Ethernet** (small local switch + building uplink) | **~10–25 ms/RPC** typical, **p99 ~30–80 ms** |
+| Ch7 (predict) | **Experiment 2 (disk)**: 4 clients write 1MB values to disk-backed store (SSD) | **~2–10 ms/RPC** typical, **p99 ~10–30 ms** |
+| Ch7 (predict) | **Experiment 3 (disk + 8-byte response)** | **~1.5–8 ms/RPC** typical, **p99 ~8–25 ms** |
+| Ch7 (predict) | **Experiment 3 + `O_DIRECT` + `O_NOATIME`** | **~2.5–15 ms/RPC** typical, **p99 ~15–50 ms** |
+
 ## Performance Insights & Key Concepts
 
 This section provides a detailed, chapter-by-chapter analysis of the experiments, showcasing the core concepts and methodologies that are critical for latency-sensitive applications, such as those in quantitative finance.
