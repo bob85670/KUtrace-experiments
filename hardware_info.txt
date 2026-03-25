@@ -1,0 +1,7 @@
+ASUSTeK PRIME H310I-PLUS motherboard
+M.2 slot: PCIe 3.0 x4 lane (Intel SSDPEKKW512G8)
+1x Realtek RTL8111/8168/8411 Gigabit Ethernet controller
+Intel Core i5-8600K 6-Core
+RAM: 8GB DDR4-2666
+Intel SSDPEKKW512G8 512GB NVMe SSD (PCIe 3.0 x4)
+External ethernet speed is about 900 Mbps (aligned with standard 1 Gbps Realtek chip)
